@@ -1,5 +1,5 @@
 use std::{collections::BTreeMap, u128};
-
+#[derive(Debug)]
 pub struct Pallet {
     balances: BTreeMap<String, u128>,
 }
@@ -59,6 +59,7 @@ impl Pallet {
         let new_caller_balance = caller_balance
             .checked_sub(amount)
             .ok_or("Insufficient balance")?; // Underflow
+
         let new_to_balance = to_balance.checked_add(amount).ok_or("Overflow")?; // Overflow, caso estoure o valor maximo do tipo
 
         self.balances.insert(caller, new_caller_balance);

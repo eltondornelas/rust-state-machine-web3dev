@@ -1,13 +1,43 @@
 mod balances;
+mod system;
 // use balances::Pallet;
+#[derive(Debug)]
+pub struct Runtime {
+    balances: balances::Pallet,
+    system: system::Pallet,
+}
 
+impl Runtime {
+    fn new() -> Self {
+        Self {
+            balances: balances::Pallet::new(),
+            system: system::Pallet::new(),
+        }
+    }
+}
 fn main() {
-    let mut pallet = balances::Pallet::new();
-    pallet.set_balance("daniel".to_string(), 2);
+    let mut runtime = Runtime::new();
+    let alice = "alice".to_string();
+    let bob = "bob".to_string();
+    let charlie = "charlie".to_string();
 
-    let balance = pallet.get_balance("daniel".to_string());
-    println!("Balance: {}", balance);
-    println!("Hello, web3devs!!")
+    runtime.balances.set_balance(alice.clone(), 100);
+    runtime.system.increment_block_number();
+    assert_eq!(runtime.system.block_number(), 1);
+
+    runtime.system.increment_nonce(&alice);
+    let _res = runtime
+        .balances
+        .transfer(alice.clone(), bob, 30)
+        .map_err(|e| eprintln!("{}", e));
+
+    runtime.system.increment_nonce(&alice);
+    let _res = runtime
+        .balances
+        .transfer(alice, charlie, 20)
+        .map_err(|e| eprintln!("{}", e));
+
+    println!("{:#?}", runtime);
 }
 
 // cargo build
