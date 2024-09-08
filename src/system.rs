@@ -1,9 +1,9 @@
 use std::collections::BTreeMap;
 
-
 type BlockNumber = u32;
 type Nonce = u32;
 type AccountId = String;
+// tipos abstratos
 
 // module for blockchain metadata
 #[derive(Debug)]

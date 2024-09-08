@@ -1,9 +1,16 @@
 mod balances;
 mod system;
+
 // use balances::Pallet;
+
+mod types {
+    pub type Balance = u128;
+    pub type AccountId = String;
+}
+
 #[derive(Debug)]
 pub struct Runtime {
-    balances: balances::Pallet,
+    balances: balances::Pallet<types::AccountId, types::Balance>,
     system: system::Pallet,
 }
 
@@ -15,6 +22,7 @@ impl Runtime {
         }
     }
 }
+
 fn main() {
     let mut runtime = Runtime::new();
     let alice = "alice".to_string();
