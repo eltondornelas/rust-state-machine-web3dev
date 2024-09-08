@@ -1,21 +1,27 @@
+use num::traits::{One, Zero};
 use std::collections::BTreeMap;
 
-type BlockNumber = u32;
-type Nonce = u32;
-type AccountId = String;
+// type BlockNumber = u32;
+// type Nonce = u32;
+// type AccountId = String;
 // tipos abstratos
 
 // module for blockchain metadata
 #[derive(Debug)]
-pub struct Pallet {
+pub struct Pallet<BlockNumber, AccountId, Nonce> {
     block_number: BlockNumber,
     nonce: BTreeMap<AccountId, Nonce>,
 }
 
-impl Pallet {
+impl<BlockNumber, AccountId, Nonce> Pallet<BlockNumber, AccountId, Nonce>
+where
+    BlockNumber: Zero + One + Copy,
+    AccountId: Ord + Clone,
+    Nonce: Zero + Copy + One,
+{
     pub fn new() -> Self {
         Pallet {
-            block_number: 0,
+            block_number: BlockNumber::zero(),
             nonce: BTreeMap::new(),
         }
     }
@@ -25,11 +31,11 @@ impl Pallet {
     }
 
     pub fn increment_block_number(&mut self) {
-        self.block_number += 1; // nao eh safe math; o block comeca do 0 e o valor maximo nao vai chegar por isso
+        self.block_number = self.block_number + BlockNumber::one();
     }
 
     pub fn increment_nonce(&mut self, account: &AccountId) {
-        let nonce = self.nonce.get(account).unwrap_or(&0) + 1;
+        let nonce = *self.nonce.get(account).unwrap_or(&Nonce::zero()) + Nonce::one();
         self.nonce.insert(account.clone(), nonce);
     }
 }
@@ -40,7 +46,7 @@ mod test {
 
     #[test]
     fn init_system() {
-        let mut system = Pallet::new();
+        let mut system = Pallet::<u64, String, u32>::new();
 
         assert_eq!(system.block_number, 0);
         assert_eq!(system.nonce.get("daniel"), None);

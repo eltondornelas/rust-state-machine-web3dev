@@ -1,4 +1,4 @@
-use num::{CheckedAdd, CheckedSub, Zero};
+use num::traits::{CheckedAdd, CheckedSub, Zero};
 use std::collections::BTreeMap;
 
 // type Balance = u128;
@@ -85,7 +85,7 @@ mod tests {
 
     #[test]
     fn init_balances() {
-        let mut balances = Pallet::new();
+        let mut balances = super::Pallet::<String, u128>::new();
 
         assert_eq!(balances.get_balance("alice".to_string()), 0);
         balances.set_balance("alice".to_string(), 100);
@@ -95,7 +95,7 @@ mod tests {
 
     #[test]
     fn transfer_balance() {
-        let mut balances = Pallet::new();
+        let mut balances = Pallet::<String, u128>::new();
 
         assert_eq!(
             balances.transfer("daniel".to_string(), "vini".to_string(), 10),
