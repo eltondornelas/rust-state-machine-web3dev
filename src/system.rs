@@ -1,10 +1,15 @@
 use std::collections::BTreeMap;
 
+
+type BlockNumber = u32;
+type Nonce = u32;
+type AccountId = String;
+
 // module for blockchain metadata
 #[derive(Debug)]
 pub struct Pallet {
-    block_number: u32,
-    nonce: BTreeMap<String, u32>,
+    block_number: BlockNumber,
+    nonce: BTreeMap<AccountId, Nonce>,
 }
 
 impl Pallet {
@@ -15,7 +20,7 @@ impl Pallet {
         }
     }
 
-    pub fn block_number(&self) -> u32 {
+    pub fn block_number(&self) -> BlockNumber {
         self.block_number
     }
 
@@ -23,7 +28,7 @@ impl Pallet {
         self.block_number += 1; // nao eh safe math; o block comeca do 0 e o valor maximo nao vai chegar por isso
     }
 
-    pub fn increment_nonce(&mut self, account: &String) {
+    pub fn increment_nonce(&mut self, account: &AccountId) {
         let nonce = self.nonce.get(account).unwrap_or(&0) + 1;
         self.nonce.insert(account.clone(), nonce);
     }

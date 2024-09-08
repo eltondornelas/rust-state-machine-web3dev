@@ -1,7 +1,11 @@
 use std::{collections::BTreeMap, u128};
+
+type Balance = u128;
+type AccountId = String;
+
 #[derive(Debug)]
 pub struct Pallet {
-    balances: BTreeMap<String, u128>,
+    balances: BTreeMap<AccountId, Balance>,
 }
 
 impl Pallet {
@@ -12,7 +16,7 @@ impl Pallet {
     }
 
     // video
-    pub fn set_balance(&mut self, account: String, amount: u128) {
+    pub fn set_balance(&mut self, account: AccountId, amount: Balance) {
         self.balances.insert(account, amount);
     }
 
@@ -27,7 +31,7 @@ impl Pallet {
         somos capazes de fazer nossa API sempre retornar um u128 convertendo qualquer usuário com valor None em 0.
     */
     // codigo no video
-    pub fn get_balance(&self, account: String) -> u128 {
+    pub fn get_balance(&self, account: AccountId) -> Balance {
         *self.balances.get(&account).unwrap_or(&0)
         // match self.balances.get(&account) {
         //     Some(amount) => *amount,
@@ -49,9 +53,9 @@ impl Pallet {
     /// e se não ocorrem overflow/underflow matemáticos.
     pub fn transfer(
         &mut self,
-        caller: String,
-        to: String,
-        amount: u128,
+        caller: AccountId,
+        to: AccountId,
+        amount: Balance,
     ) -> Result<(), &'static str> {
         let caller_balance = self.get_balance(caller.clone());
         let to_balance = self.get_balance(to.clone());
@@ -69,6 +73,10 @@ impl Pallet {
     }
 }
 
+// #[cfg(test)]
+// mod tests {
+//     use super::*;
+// }
 #[test]
 fn init_balances() {
     let mut balances = Pallet::new();
@@ -97,7 +105,7 @@ fn transfer_balance() {
     assert_eq!(balances.get_balance("daniel".to_string()), 7);
     assert_eq!(balances.get_balance("vini".to_string()), 3);
 
-    balances.set_balance("vini".to_string(), u128::MAX);
+    balances.set_balance("vini".to_string(), Balance::MAX);
     assert_eq!(
         balances.transfer("daniel".to_string(), "vini".to_string(), 3),
         Err("Overflow")
