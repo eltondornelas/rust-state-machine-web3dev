@@ -6,36 +6,39 @@ use std::collections::BTreeMap;
 // type AccountId = String;
 // tipos abstratos
 
-// module for blockchain metadata
-#[derive(Debug)]
-pub struct Pallet<BlockNumber, AccountId, Nonce> {
-    block_number: BlockNumber,
-    nonce: BTreeMap<AccountId, Nonce>,
+pub trait Config {
+    type AccountId: Ord + Clone;
+    type BlockNumber: Zero + One + Copy; // AddAssign
+    type Nonce: Zero + Copy + One;
 }
 
-impl<BlockNumber, AccountId, Nonce> Pallet<BlockNumber, AccountId, Nonce>
-where
-    BlockNumber: Zero + One + Copy,
-    AccountId: Ord + Clone,
-    Nonce: Zero + Copy + One,
-{
+/// module for blockchain metadata
+/// This is the System Pallet
+/// It handles low level state needed for your blockchain
+#[derive(Debug)]
+pub struct Pallet<T: Config> {
+    block_number: T::BlockNumber,
+    nonce: BTreeMap<T::AccountId, T::Nonce>,
+}
+
+impl<T: Config> Pallet<T> {
     pub fn new() -> Self {
         Pallet {
-            block_number: BlockNumber::zero(),
+            block_number: T::BlockNumber::zero(),
             nonce: BTreeMap::new(),
         }
     }
 
-    pub fn block_number(&self) -> BlockNumber {
+    pub fn block_number(&self) -> T::BlockNumber {
         self.block_number
     }
 
     pub fn increment_block_number(&mut self) {
-        self.block_number = self.block_number + BlockNumber::one();
+        self.block_number = self.block_number + T::BlockNumber::one();
     }
 
-    pub fn increment_nonce(&mut self, account: &AccountId) {
-        let nonce = *self.nonce.get(account).unwrap_or(&Nonce::zero()) + Nonce::one();
+    pub fn increment_nonce(&mut self, account: &T::AccountId) {
+        let nonce = *self.nonce.get(account).unwrap_or(&T::Nonce::zero()) + T::Nonce::one();
         self.nonce.insert(account.clone(), nonce);
     }
 }
@@ -44,9 +47,17 @@ where
 mod test {
     use crate::system::Pallet;
 
+    struct TestConfig;
+
+    impl super::Config for TestConfig {
+        type AccountId = String;
+        type BlockNumber = u32;
+        type Nonce = u32;
+    }
+
     #[test]
     fn init_system() {
-        let mut system = Pallet::<u64, String, u32>::new();
+        let mut system = Pallet::<TestConfig>::new();
 
         assert_eq!(system.block_number, 0);
         assert_eq!(system.nonce.get("daniel"), None);
