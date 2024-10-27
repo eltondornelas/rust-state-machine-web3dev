@@ -5,16 +5,17 @@ use std::collections::BTreeMap;
 // type AccountId = String;
 // tipo abstrato; ao utilizar generico na no Pallet, fica desnecessario a inclusao do "type" aqui no arquivo
 
-#[derive(Debug)]
-pub struct Pallet<AccountId, Balance> {
-    balances: BTreeMap<AccountId, Balance>,
+pub trait Config {
+    type AccountId: Ord + Clone;
+    type Balance: CheckedAdd + CheckedSub + Zero + Copy;
 }
 
-impl<AccountId, Balance> Pallet<AccountId, Balance>
-where
-    AccountId: Ord + Clone,
-    Balance: CheckedAdd + CheckedSub + Zero + Copy,
-{
+#[derive(Debug)]
+pub struct Pallet<T: Config> {
+    balances: BTreeMap<T::AccountId, T::Balance>,
+}
+
+impl<T: Config> Pallet<T> {
     pub fn new() -> Self {
         Pallet {
             balances: BTreeMap::new(),
@@ -22,7 +23,7 @@ where
     }
 
     // video
-    pub fn set_balance(&mut self, account: AccountId, amount: Balance) {
+    pub fn set_balance(&mut self, account: T::AccountId, amount: T::Balance) {
         self.balances.insert(account, amount);
     }
 
@@ -37,8 +38,8 @@ where
         somos capazes de fazer nossa API sempre retornar um u128 convertendo qualquer usuário com valor None em 0.
     */
     // codigo no video
-    pub fn get_balance(&self, account: AccountId) -> Balance {
-        *self.balances.get(&account).unwrap_or(&Balance::zero())
+    pub fn get_balance(&self, account: T::AccountId) -> T::Balance {
+        *self.balances.get(&account).unwrap_or(&T::Balance::zero())
         // match self.balances.get(&account) {
         //     Some(amount) => *amount,
         //     None => 0
@@ -59,9 +60,9 @@ where
     /// e se não ocorrem overflow/underflow matemáticos.
     pub fn transfer(
         &mut self,
-        caller: AccountId,
-        to: AccountId,
-        amount: Balance,
+        caller: T::AccountId,
+        to: T::AccountId,
+        amount: T::Balance,
     ) -> Result<(), &'static str> {
         let caller_balance = self.get_balance(caller.clone());
         let to_balance = self.get_balance(to.clone());
@@ -83,9 +84,16 @@ where
 mod tests {
     use super::*;
 
+    struct TestConfig;
+
+    impl super::Config for TestConfig {
+        type AccountId = String;
+        type Balance = u128;
+    }
+
     #[test]
     fn init_balances() {
-        let mut balances = super::Pallet::<String, u128>::new();
+        let mut balances = super::Pallet::<TestConfig>::new();
 
         assert_eq!(balances.get_balance("alice".to_string()), 0);
         balances.set_balance("alice".to_string(), 100);
@@ -95,7 +103,7 @@ mod tests {
 
     #[test]
     fn transfer_balance() {
-        let mut balances = Pallet::<String, u128>::new();
+        let mut balances = Pallet::<TestConfig>::new();
 
         assert_eq!(
             balances.transfer("daniel".to_string(), "vini".to_string(), 10),
@@ -111,7 +119,7 @@ mod tests {
         assert_eq!(balances.get_balance("daniel".to_string()), 7);
         assert_eq!(balances.get_balance("vini".to_string()), 3);
 
-        balances.set_balance("vini".to_string(), crate::types::Balance::MAX);
+        balances.set_balance("vini".to_string(), u128::MAX);
         assert_eq!(
             balances.transfer("daniel".to_string(), "vini".to_string(), 3),
             Err("Overflow")
