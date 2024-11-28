@@ -5,8 +5,10 @@ use std::collections::BTreeMap;
 // type AccountId = String;
 // tipo abstrato; ao utilizar generico na no Pallet, fica desnecessario a inclusao do "type" aqui no arquivo
 
-pub trait Config {
-    type AccountId: Ord + Clone;
+/* In the Polkadot SDK ecosystem, we call this "tight coupling" because a runtime which contains the Balances Pallet must also contain the System Pallet.
+   In a sense these two pallets are tightly coupled to one another.  
+*/
+pub trait Config: crate::system::Config {
     type Balance: CheckedAdd + CheckedSub + Zero + Copy;
 }
 
@@ -87,8 +89,13 @@ mod tests {
     struct TestConfig;
 
     impl super::Config for TestConfig {
-        type AccountId = String;
         type Balance = u128;
+    }
+
+    impl crate::system::Config for TestConfig {
+        type AccountId = String;
+        type BlockNumber = u32;
+        type Nonce = u32;
     }
 
     #[test]
