@@ -9,7 +9,13 @@ mod types {
     pub type AccountId = String;
     pub type BlockNumber = u32;
     pub type Nonce = u32;
+
+    pub type Extrinsic = crate::support::Extrinsic<AccountId, crate::RuntimeCall>;
+    pub type Header = crate::support::Header<BlockNumber>;
+    pub type Block = crate::support::Block<Header, Extrinsic>;
 }
+
+pub enum RuntimeCall {}
 
 #[derive(Debug)]
 pub struct Runtime {
