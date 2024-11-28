@@ -1,3 +1,4 @@
+use crate::support::DispatchResult;
 use num::traits::{CheckedAdd, CheckedSub, Zero};
 use std::collections::BTreeMap;
 
@@ -6,7 +7,7 @@ use std::collections::BTreeMap;
 // tipo abstrato; ao utilizar generico na no Pallet, fica desnecessario a inclusao do "type" aqui no arquivo
 
 /* In the Polkadot SDK ecosystem, we call this "tight coupling" because a runtime which contains the Balances Pallet must also contain the System Pallet.
-   In a sense these two pallets are tightly coupled to one another.  
+   In a sense these two pallets are tightly coupled to one another.
 */
 pub trait Config: crate::system::Config {
     type Balance: CheckedAdd + CheckedSub + Zero + Copy;
@@ -65,7 +66,7 @@ impl<T: Config> Pallet<T> {
         caller: T::AccountId,
         to: T::AccountId,
         amount: T::Balance,
-    ) -> Result<(), &'static str> {
+    ) -> DispatchResult {
         let caller_balance = self.get_balance(caller.clone());
         let to_balance = self.get_balance(to.clone());
 
