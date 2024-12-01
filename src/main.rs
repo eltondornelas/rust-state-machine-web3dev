@@ -17,7 +17,12 @@ mod types {
     pub type Block = crate::support::Block<Header, Extrinsic>;
 }
 
-pub enum RuntimeCall {}
+pub enum RuntimeCall {
+    BalancesTransfer {
+        to: types::AccountId,
+        value: types::Balance
+    }
+}
 
 #[derive(Debug)]
 pub struct Runtime {
@@ -89,7 +94,11 @@ impl crate::support::Dispatch for Runtime {
         caller: Self::Caller,
         runtime_call: Self::Call,
     ) -> support::DispatchResult {
-        unimplemented!();
+        match runtime_call {
+            RuntimeCall::BalancesTransfer { to, value } => {
+                self.balances.transfer(caller, to, value)
+            }
+        }
     }
 }
 
