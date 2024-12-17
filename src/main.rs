@@ -20,8 +20,8 @@ mod types {
 pub enum RuntimeCall {
     BalancesTransfer {
         to: types::AccountId,
-        value: types::Balance
-    }
+        value: types::Balance,
+    },
 }
 
 #[derive(Debug)]
@@ -109,6 +109,26 @@ fn main() {
     let charlie = "charlie".to_string();
 
     runtime.balances.set_balance(alice.clone(), 100);
+
+    let block_1 = types::Block {
+        header: support::Header { block_number: 1 },
+        extrinsics: vec![
+            support::Extrinsic {
+                caller: alice.clone(),
+                call: RuntimeCall::BalancesTransfer { to: bob, value: 30 },
+            },
+            support::Extrinsic {
+                caller: alice.clone(),
+                call: RuntimeCall::BalancesTransfer { to: charlie, value: 20 },
+            }
+        ],
+    };
+
+    runtime.execute_block(block_1).expect("invalid block!");
+
+    println!("{:#?}", runtime);
+
+    /*     runtime.balances.set_balance(alice.clone(), 100);
     runtime.system.increment_block_number();
     assert_eq!(runtime.system.block_number(), 1);
 
@@ -125,6 +145,7 @@ fn main() {
         .map_err(|e| eprintln!("{}", e));
 
     println!("{:#?}", runtime);
+    */
 }
 
 // cargo build
