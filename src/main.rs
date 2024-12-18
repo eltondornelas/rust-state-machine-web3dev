@@ -18,10 +18,14 @@ mod types {
 }
 
 pub enum RuntimeCall {
-    BalancesTransfer {
-        to: types::AccountId,
-        value: types::Balance,
-    },
+    Balances(balances::Call<Runtime>),
+    // BalancesTransfer {
+    //     to: types::AccountId,
+    //     value: types::Balance,
+    // },
+    // BalancesSetBalance {
+    //     value: types::Balance
+    // }
 }
 
 #[derive(Debug)]
@@ -95,9 +99,16 @@ impl crate::support::Dispatch for Runtime {
         runtime_call: Self::Call,
     ) -> support::DispatchResult {
         match runtime_call {
+            RuntimeCall::Balances(call) => self.balances.dispatch(caller, call)
+            /* 
             RuntimeCall::BalancesTransfer { to, value } => {
                 self.balances.transfer(caller, to, value)
+            },
+            RuntimeCall::BalancesSetBalance { value } => {
+                self.balances.set_balance(caller, value);
+                Ok(())
             }
+            */
         }
     }
 }
@@ -110,17 +121,24 @@ fn main() {
 
     runtime.balances.set_balance(alice.clone(), 100);
 
+    use balances::Call::{Transfer, SetBalance};
+
     let block_1 = types::Block {
         header: support::Header { block_number: 1 },
         extrinsics: vec![
             support::Extrinsic {
                 caller: alice.clone(),
-                call: RuntimeCall::BalancesTransfer { to: bob, value: 30 },
+                // call: RuntimeCall::Balances(balancess::Call::Transfer { to: bob, value: 30 }),
+                call: RuntimeCall::Balances(Transfer { to: bob, value: 30 }),
             },
             support::Extrinsic {
                 caller: alice.clone(),
-                call: RuntimeCall::BalancesTransfer { to: charlie, value: 20 },
-            }
+                call: RuntimeCall::Balances(Transfer { to: charlie, value: 20}),
+            },
+            support::Extrinsic {
+                caller: alice,
+                call: RuntimeCall::Balances(SetBalance { value: 0 }),
+            },
         ],
     };
 
