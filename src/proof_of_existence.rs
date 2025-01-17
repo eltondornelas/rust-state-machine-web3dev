@@ -9,9 +9,27 @@ pub trait Config: crate::system::Config {
     type Content: Debug + Ord;
 }
 
-// pub enum Call<T: Config> {
-//     Claim { content: T::Content }
-// }
+pub enum Call<T: Config> {
+    CreateClaim { claim: T::Content },
+    RevokeClaim { claim: T::Content },
+}
+
+impl<T: Config> crate::support::Dispatch for Pallet<T> {
+    type Caller = T::AccountId;
+    type Call = Call<T>;
+
+    fn dispatch(
+        &mut self,
+        caller: Self::Caller,
+        call: Self::Call,
+    ) -> crate::support::DispatchResult {
+        match call {
+            Call::CreateClaim { claim: content } => self.create_claim(caller, content)?,
+            Call::RevokeClaim { claim: content } => self.revoke_claim(caller, content)?,
+        }
+        Ok(())
+    }
+}
 
 /// This is the Proof of Existence Module.
 /// It is a simple module that allows accounts to claim existence of some data.
