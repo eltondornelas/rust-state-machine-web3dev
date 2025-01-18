@@ -33,11 +33,11 @@ impl<T: Config> Pallet<T> {
         self.block_number
     }
 
-    pub fn increment_block_number(&mut self) {
+    pub fn inc_block_number(&mut self) {
         self.block_number = self.block_number + T::BlockNumber::one();
     }
 
-    pub fn increment_nonce(&mut self, account: &T::AccountId) {
+    pub fn inc_nonce(&mut self, account: &T::AccountId) {
         let nonce = *self.nonce.get(account).unwrap_or(&T::Nonce::zero()) + T::Nonce::one();
         self.nonce.insert(account.clone(), nonce);
     }
@@ -62,10 +62,10 @@ mod test {
         assert_eq!(system.block_number, 0);
         assert_eq!(system.nonce.get("daniel"), None);
 
-        system.increment_block_number();
+        system.inc_block_number();
         assert_eq!(system.block_number(), 1);
 
-        system.increment_nonce(&"daniel".to_string());
+        system.inc_nonce(&"daniel".to_string());
         assert_eq!(system.nonce.get("daniel").unwrap(), &1);
     }
 }
