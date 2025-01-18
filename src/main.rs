@@ -1,5 +1,5 @@
 use crate::balances::Call::transfer;
-use proof_of_existence::Call::{CreateClaim, RevokeClaim};
+use proof_of_existence::Call::{create_claim, revoke_claim};
 use support::Dispatch;
 
 mod balances;
@@ -139,7 +139,7 @@ fn main() {
                },
                support::Extrinsic {
                    caller: alice,
-                   call: RuntimeCall::ProofOfExistence(CreateClaim {
+                   call: RuntimeCall::ProofOfExistence(create_claim {
                        claim: "my_content".to_string(),
                    }),
                },*/
@@ -151,23 +151,23 @@ fn main() {
         extrinsics: vec![
             support::Extrinsic {
                 caller: alice.clone(),
-                call: RuntimeCall::ProofOfExistence(CreateClaim {
+                call: RuntimeCall::ProofOfExistence(create_claim {
                     claim: "my_document".to_string(),
                 }),
             },
             support::Extrinsic {
                 caller: bob.clone(),
-                call: RuntimeCall::ProofOfExistence(CreateClaim {
+                call: RuntimeCall::ProofOfExistence(create_claim {
                     claim: "my_document2".to_string(),
                 }),
             }, /*,
                support::Extrinsic {
                    caller: bob.clone(),
-                   call: RuntimeCall::ProofOfExistence(CreateClaim { claim: "my_document".to_string() }),
+                   call: RuntimeCall::ProofOfExistence(create_claim { claim: "my_document".to_string() }),
                }*/
             support::Extrinsic {
                 caller: alice.clone(),
-                call: RuntimeCall::ProofOfExistence(RevokeClaim {
+                call: RuntimeCall::ProofOfExistence(revoke_claim {
                     claim: "my_document".to_string(),
                 }),
             },

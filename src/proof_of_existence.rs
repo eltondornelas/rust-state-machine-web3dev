@@ -9,27 +9,27 @@ pub trait Config: crate::system::Config {
     type Content: Debug + Ord;
 }
 
-pub enum Call<T: Config> {
-    CreateClaim { claim: T::Content },
-    RevokeClaim { claim: T::Content },
-}
+// pub enum Call<T: Config> {
+//     CreateClaim { claim: T::Content },
+//     RevokeClaim { claim: T::Content },
+// }
 
-impl<T: Config> crate::support::Dispatch for Pallet<T> {
-    type Caller = T::AccountId;
-    type Call = Call<T>;
+// impl<T: Config> crate::support::Dispatch for Pallet<T> {
+//     type Caller = T::AccountId;
+//     type Call = Call<T>;
 
-    fn dispatch(
-        &mut self,
-        caller: Self::Caller,
-        call: Self::Call,
-    ) -> crate::support::DispatchResult {
-        match call {
-            Call::CreateClaim { claim: content } => self.create_claim(caller, content)?,
-            Call::RevokeClaim { claim: content } => self.revoke_claim(caller, content)?,
-        }
-        Ok(())
-    }
-}
+//     fn dispatch(
+//         &mut self,
+//         caller: Self::Caller,
+//         call: Self::Call,
+//     ) -> crate::support::DispatchResult {
+//         match call {
+//             Call::CreateClaim { claim: content } => self.create_claim(caller, content)?,
+//             Call::RevokeClaim { claim: content } => self.revoke_claim(caller, content)?,
+//         }
+//         Ok(())
+//     }
+// }
 
 /// This is the Proof of Existence Module.
 /// It is a simple module that allows accounts to claim existence of some data.
@@ -40,19 +40,8 @@ pub struct Pallet<T: Config> {
     claims: BTreeMap<T::Content, T::AccountId>,
 }
 
+#[macros::call]
 impl<T: Config> Pallet<T> {
-    /// Create a new instance of the Proof of Existence Module.
-    pub fn new() -> Self {
-        Pallet {
-            claims: BTreeMap::new(),
-        }
-    }
-
-    /// Get the owner (if any) of a claim.
-    pub fn get_claim(&self, claim: &T::Content) -> Option<&T::AccountId> {
-        self.claims.get(claim)
-    }
-
     /// Create a new claim on behalf of the `caller`.
     /// This function will return an error if someone already has claimed that content.
     pub fn create_claim(&mut self, caller: T::AccountId, claim: T::Content) -> DispatchResult {
@@ -76,6 +65,20 @@ impl<T: Config> Pallet<T> {
 
         self.claims.remove(&claim);
         Ok(())
+    }
+}
+
+impl<T: Config> Pallet<T> {
+    /// Create a new instance of the Proof of Existence Module.
+    pub fn new() -> Self {
+        Pallet {
+            claims: BTreeMap::new(),
+        }
+    }
+
+    /// Get the owner (if any) of a claim.
+    pub fn get_claim(&self, claim: &T::Content) -> Option<&T::AccountId> {
+        self.claims.get(claim)
     }
 }
 
