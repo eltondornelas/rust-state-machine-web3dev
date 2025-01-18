@@ -16,6 +16,7 @@ pub trait Config: crate::system::Config {
 // A public enum which describes the calls we want to expose to the dispatcher.
 // We should expect that the caller of each call will be provided by the dispatcher,
 // and not included as a parameter of the call.
+// "inner enum"
 pub enum Call<T: Config> {
     Transfer { to: T::AccountId, value: T::Balance },
     SetBalance { value: T::Balance },

@@ -1,5 +1,5 @@
 use balances::Call::{SetBalance, Transfer};
-use proof_of_existence::Call::CreateClaim;
+use proof_of_existence::Call::{CreateClaim, RevokeClaim};
 use support::Dispatch;
 
 mod balances;
@@ -17,9 +17,10 @@ mod types {
     pub type Header = crate::support::Header<BlockNumber>;
     pub type Block = crate::support::Block<Header, Extrinsic>;
 
-    pub type Content = String;
+    pub type Content = String; // todo: no roteiro seria &'static str; mas o correto mesmo aqui deveria ser um hash
 }
 
+// "outer enum"
 pub enum RuntimeCall {
     Balances(balances::Call<Runtime>),
     ProofOfExistence(proof_of_existence::Call<Runtime>),
@@ -65,24 +66,23 @@ impl Runtime {
 
         // iter: This method creates an iterator that borrows each element from the vector, allowing you to read the values without taking ownership. It's useful when you want to iterate over the vector while keeping it intact.
         // into_iter: This method consumes the vector, transferring ownership of each element to the iterator. It's handy when you want to move or transfer ownership of the vector's elements to another part of your code. After using into_iter, the original vector can't be used anymore, as ownership has been transferred.
+        /*
+           An extrinsic error is not enough to trigger the block to be invalid. We capture the
+           result, and emit an error message if one is emitted.
+        */
         for (i, support::Extrinsic { caller, call }) in block.extrinsics.into_iter().enumerate() {
             self.system.increment_nonce(&caller);
 
-            let res = self.dispatch(caller, call).map_err(|e| {
-                format!(
-                    "Error in block {}: extrinsic {}: {}",
-                    block.header.block_number, i, e
+            let _res = self.dispatch(caller, call).map_err(|e| {
+                eprintln!(
+                    "Extrinsic Error\n\tBlock Number: {}\n\tExtrinsic Number: {}\n\tError: {}",
+                    // "Error in block {}: extrinsic {}: {}",
+                    block.header.block_number,
+                    i,
+                    e
                 )
             });
         }
-
-        /*
-        * let _res = self.dispatch(caller, call).map_err(|e| eprintln!("{}", e));
-        * eprintln!(
-           "Extrinsic Error\n\tBlock Number: {}\n\tExtrinsic Number: {}\n\tError: {}",
-           block.header.block_number, i, e
-          )
-        */
 
         Ok(())
     }
@@ -121,8 +121,10 @@ fn main() {
         extrinsics: vec![
             support::Extrinsic {
                 caller: alice.clone(),
-                // call: RuntimeCall::Balances(balancess::Call::Transfer { to: bob, value: 30 }),
-                call: RuntimeCall::Balances(Transfer { to: bob, value: 30 }),
+                call: RuntimeCall::Balances(Transfer {
+                    to: bob.clone(),
+                    value: 30,
+                }),
             },
             support::Extrinsic {
                 caller: alice.clone(),
@@ -130,42 +132,53 @@ fn main() {
                     to: charlie,
                     value: 20,
                 }),
-            },
-            support::Extrinsic {
-                caller: alice.clone(),
-                call: RuntimeCall::Balances(SetBalance { value: 0 }),
-            },
-            support::Extrinsic {
-                caller: alice,
-                call: RuntimeCall::ProofOfExistence(CreateClaim {
-                    claim: "my_content".to_string(),
-                }),
-            },
+            }, /*,
+               support::Extrinsic {
+                   caller: alice.clone(),
+                   call: RuntimeCall::Balances(SetBalance { value: 0 }),
+               },
+               support::Extrinsic {
+                   caller: alice,
+                   call: RuntimeCall::ProofOfExistence(CreateClaim {
+                       claim: "my_content".to_string(),
+                   }),
+               },*/
         ],
     };
 
     runtime.execute_block(block_1).expect("invalid block!");
 
-    println!("{:#?}", runtime);
+    let block_2 = types::Block {
+        header: support::Header { block_number: 2 },
+        extrinsics: vec![
+            support::Extrinsic {
+                caller: alice.clone(),
+                call: RuntimeCall::ProofOfExistence(CreateClaim {
+                    claim: "my_document".to_string(),
+                }),
+            },
+            support::Extrinsic {
+                caller: bob.clone(),
+                call: RuntimeCall::ProofOfExistence(CreateClaim {
+                    claim: "my_document2".to_string(),
+                }),
+            }, /*,
+               support::Extrinsic {
+                   caller: bob.clone(),
+                   call: RuntimeCall::ProofOfExistence(CreateClaim { claim: "my_document".to_string() }),
+               }*/
+            support::Extrinsic {
+                caller: alice.clone(),
+                call: RuntimeCall::ProofOfExistence(RevokeClaim {
+                    claim: "my_document".to_string(),
+                }),
+            },
+        ],
+    };
 
-    /*     runtime.balances.set_balance(alice.clone(), 100);
-    runtime.system.increment_block_number();
-    assert_eq!(runtime.system.block_number(), 1);
+    runtime.execute_block(block_2).expect("invalid block!");
 
-    runtime.system.increment_nonce(&alice);
-    let _res = runtime
-        .balances
-        .transfer(alice.clone(), bob, 30)
-        .map_err(|e| eprintln!("{}", e));
-
-    runtime.system.increment_nonce(&alice);
-    let _res = runtime
-        .balances
-        .transfer(alice, charlie, 20)
-        .map_err(|e| eprintln!("{}", e));
-
-    println!("{:#?}", runtime);
-    */
+    println!("{:#?}", runtime)
 }
 
 // cargo build
