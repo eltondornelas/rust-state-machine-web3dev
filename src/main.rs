@@ -146,8 +146,6 @@ fn main() {
         ],
     };
 
-    runtime.execute_block(block_1).expect("invalid block!");
-
     let block_2 = types::Block {
         header: support::Header { block_number: 2 },
         extrinsics: vec![
@@ -176,6 +174,7 @@ fn main() {
         ],
     };
 
+    runtime.execute_block(block_1).expect("invalid block!");
     runtime.execute_block(block_2).expect("invalid block!");
 
     println!("{:#?}", runtime)
