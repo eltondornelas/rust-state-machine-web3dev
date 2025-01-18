@@ -1,4 +1,4 @@
-use crate::{support::DispatchResult, types};
+use crate::support::DispatchResult;
 use num::traits::{CheckedAdd, CheckedSub, Zero};
 use std::collections::BTreeMap;
 
@@ -17,35 +17,62 @@ pub trait Config: crate::system::Config {
 // We should expect that the caller of each call will be provided by the dispatcher,
 // and not included as a parameter of the call.
 // "inner enum"
-pub enum Call<T: Config> {
-    Transfer { to: T::AccountId, value: T::Balance },
-    SetBalance { value: T::Balance },
-}
+// pub enum Call<T: Config> {
+//     Transfer { to: T::AccountId, value: T::Balance },
+//     SetBalance { value: T::Balance },
+// }
 
 /// Implementation of the dispatch logic, mapping from `BalancesCall` to the appropriate underlying
 /// function we want to execute.
-impl<T: Config> crate::support::Dispatch for Pallet<T> {
-    type Caller = T::AccountId;
-    type Call = Call<T>;
+// impl<T: Config> crate::support::Dispatch for Pallet<T> {
+//     type Caller = T::AccountId;
+//     type Call = Call<T>;
 
-    fn dispatch(
-        &mut self,
-        caller: Self::Caller,
-        call: Self::Call,
-    ) -> crate::support::DispatchResult {
-        match call {
-            Call::Transfer { to, value } => self.transfer(caller, to, value),
-            Call::SetBalance { value } => {
-                self.set_balance(caller, value);
-                Ok(())
-            }
-        }
-    }
-}
+//     fn dispatch(
+//         &mut self,
+//         caller: Self::Caller,
+//         call: Self::Call,
+//     ) -> crate::support::DispatchResult {
+//         match call {
+//             Call::Transfer { to, value } => self.transfer(caller, to, value),
+//             Call::SetBalance { value } => {
+//                 self.set_balance(caller, value);
+//                 Ok(())
+//             }
+//         }
+//     }
+// }
 
 #[derive(Debug)]
 pub struct Pallet<T: Config> {
     balances: BTreeMap<T::AccountId, T::Balance>,
+}
+
+#[macros::call]
+impl<T: Config> Pallet<T> {
+    /// Transfere `amount` de uma conta para outra.
+    /// Esta função verifica se `caller` tem pelo menos `amount` de saldo para transferir,
+    /// e se não ocorrem overflow/underflow matemáticos.
+    pub fn transfer(
+        &mut self,
+        caller: T::AccountId,
+        to: T::AccountId,
+        amount: T::Balance,
+    ) -> DispatchResult {
+        let caller_balance = self.get_balance(caller.clone());
+        let to_balance = self.get_balance(to.clone());
+
+        let new_caller_balance = caller_balance
+            .checked_sub(&amount)
+            .ok_or("Insufficient balance")?; // Underflow
+
+        let new_to_balance = to_balance.checked_add(&amount).ok_or("Overflow")?; // Overflow, caso estoure o valor maximo do tipo
+
+        self.balances.insert(caller, new_caller_balance);
+        self.balances.insert(to, new_to_balance);
+
+        Ok(())
+    }
 }
 
 impl<T: Config> Pallet<T> {
@@ -87,30 +114,6 @@ impl<T: Config> Pallet<T> {
     // pub fn balance(&self, account: &String) -> u128 {
     //     *self.balances.get(account).unwrap_or(&0)
     // }
-
-    /// Transfere `amount` de uma conta para outra.
-    /// Esta função verifica se `caller` tem pelo menos `amount` de saldo para transferir,
-    /// e se não ocorrem overflow/underflow matemáticos.
-    pub fn transfer(
-        &mut self,
-        caller: T::AccountId,
-        to: T::AccountId,
-        amount: T::Balance,
-    ) -> DispatchResult {
-        let caller_balance = self.get_balance(caller.clone());
-        let to_balance = self.get_balance(to.clone());
-
-        let new_caller_balance = caller_balance
-            .checked_sub(&amount)
-            .ok_or("Insufficient balance")?; // Underflow
-
-        let new_to_balance = to_balance.checked_add(&amount).ok_or("Overflow")?; // Overflow, caso estoure o valor maximo do tipo
-
-        self.balances.insert(caller, new_caller_balance);
-        self.balances.insert(to, new_to_balance);
-
-        Ok(())
-    }
 }
 
 #[cfg(test)]

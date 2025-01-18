@@ -1,4 +1,4 @@
-use balances::Call::{SetBalance, Transfer};
+use crate::balances::Call::transfer;
 use proof_of_existence::Call::{CreateClaim, RevokeClaim};
 use support::Dispatch;
 
@@ -121,18 +121,18 @@ fn main() {
         extrinsics: vec![
             support::Extrinsic {
                 caller: alice.clone(),
-                call: RuntimeCall::Balances(Transfer {
+                call: RuntimeCall::Balances(transfer {
                     to: bob.clone(),
-                    value: 30,
+                    amount: 30,
                 }),
             },
             support::Extrinsic {
                 caller: alice.clone(),
-                call: RuntimeCall::Balances(Transfer {
+                call: RuntimeCall::Balances(transfer {
                     to: charlie,
-                    value: 20,
+                    amount: 20,
                 }),
-            }, /*,
+            }, /*
                support::Extrinsic {
                    caller: alice.clone(),
                    call: RuntimeCall::Balances(SetBalance { value: 0 }),
