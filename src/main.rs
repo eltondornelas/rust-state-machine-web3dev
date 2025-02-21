@@ -97,5 +97,11 @@ fn main() {
     runtime.execute_block(block_1).expect("invalid block!");
     runtime.execute_block(block_2).expect("invalid block!");
 
+    assert_eq!(
+        runtime
+            .proof_of_existence
+            .get_claim(&"my_document2".to_string()),
+        Some(&bob)
+    );
     println!("{:#?}", runtime)
 }
