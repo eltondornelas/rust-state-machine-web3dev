@@ -1,11 +1,6 @@
 use num::traits::{One, Zero};
 use std::collections::BTreeMap;
 
-// type BlockNumber = u32;
-// type Nonce = u32;
-// type AccountId = String;
-// tipos abstratos
-
 pub trait Config {
     type AccountId: Ord + Clone;
     type BlockNumber: Zero + One + Copy; // AddAssign

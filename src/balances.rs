@@ -2,46 +2,12 @@ use crate::support::DispatchResult;
 use num::traits::{CheckedAdd, CheckedSub, Zero};
 use std::collections::BTreeMap;
 
-// type Balance = u128;
-// type AccountId = String;
-// tipo abstrato; ao utilizar generico na no Pallet, fica desnecessario a inclusao do "type" aqui no arquivo
-
 /* In the Polkadot SDK ecosystem, we call this "tight coupling" because a runtime which contains the Balances Pallet must also contain the System Pallet.
    In a sense these two pallets are tightly coupled to one another.
 */
 pub trait Config: crate::system::Config {
     type Balance: CheckedAdd + CheckedSub + Zero + Copy;
 }
-
-// A public enum which describes the calls we want to expose to the dispatcher.
-// We should expect that the caller of each call will be provided by the dispatcher,
-// and not included as a parameter of the call.
-// "inner enum"
-// pub enum Call<T: Config> {
-//     Transfer { to: T::AccountId, value: T::Balance },
-//     SetBalance { value: T::Balance },
-// }
-
-/// Implementation of the dispatch logic, mapping from `BalancesCall` to the appropriate underlying
-/// function we want to execute.
-// impl<T: Config> crate::support::Dispatch for Pallet<T> {
-//     type Caller = T::AccountId;
-//     type Call = Call<T>;
-
-//     fn dispatch(
-//         &mut self,
-//         caller: Self::Caller,
-//         call: Self::Call,
-//     ) -> crate::support::DispatchResult {
-//         match call {
-//             Call::Transfer { to, value } => self.transfer(caller, to, value),
-//             Call::SetBalance { value } => {
-//                 self.set_balance(caller, value);
-//                 Ok(())
-//             }
-//         }
-//     }
-// }
 
 #[derive(Debug)]
 pub struct Pallet<T: Config> {
@@ -66,7 +32,7 @@ impl<T: Config> Pallet<T> {
             .checked_sub(&amount)
             .ok_or("Insufficient balance")?; // Underflow
 
-        let new_to_balance = to_balance.checked_add(&amount).ok_or("Overflow")?; // Overflow, caso estoure o valor maximo do tipo
+        let new_to_balance = to_balance.checked_add(&amount).ok_or("Overflow")?;
 
         self.balances.insert(caller, new_caller_balance);
         self.balances.insert(to, new_to_balance);
@@ -82,38 +48,18 @@ impl<T: Config> Pallet<T> {
         }
     }
 
-    // video
     pub fn set_balance(&mut self, account: T::AccountId, amount: T::Balance) {
         self.balances.insert(account, amount);
     }
-
-    // escrita
-    // pub fn set_balance(&mut self, who: &String, amount: u128) {
-    //     self.balances.insert(who.clone(), amount);
-    // }
 
     /*
         Note que fazemos nosso pequeno truque aqui!
         Em vez de expor uma API que força o usuário a lidar com um Option,
         somos capazes de fazer nossa API sempre retornar um u128 convertendo qualquer usuário com valor None em 0.
     */
-    // codigo no video
     pub fn get_balance(&self, account: T::AccountId) -> T::Balance {
         *self.balances.get(&account).unwrap_or(&T::Balance::zero())
-        // match self.balances.get(&account) {
-        //     Some(amount) => *amount,
-        //     None => 0
-        // }
     }
-
-    // codigo escrito no texto
-    // pub fn balance(&self, who: &String) -> u128 {
-    //     *self.balances.get(&who).unwrap_or(&0)
-    // }
-
-    // pub fn balance(&self, account: &String) -> u128 {
-    //     *self.balances.get(account).unwrap_or(&0)
-    // }
 }
 
 #[cfg(test)]
